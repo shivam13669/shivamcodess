@@ -10,12 +10,12 @@
     }
   },
   {
-    "name": "Transport-Management-System",
-    "desc": "Transport management system built with mern stack.",
-    "image": "tms",
+    "name": "CRM Management",
+    "desc": "CRM Management software for healthcare support",
+    "image": "crm",
     "category": "mernstack",
     "links": {
-      "code": "",
+      "code": "https://github.com/shivam13669/CRMManagement10/",
       "view" :""
     }
   },
