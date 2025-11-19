@@ -11,7 +11,7 @@
   },
   {
     "name": "CRM Management",
-    "desc": "CRM management software for healthcare support",
+    "desc": "CRM management for healthcare system.",
     "image": "crm",
     "category": "mernstack",
     "links": {
