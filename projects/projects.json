@@ -2,7 +2,7 @@
   {
     "name": "StoriesByFoot",
     "desc": "A visually immersive travel storytelling website",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2F20ebdb5eda8e498d819d37876729b943?format=webp&width=800",
+    "image": "storiesbyfoot",
     "category": "javascript",
     "links": {
       "code": "https://github.com/shivam13669/webpage1mainfile/",
@@ -12,7 +12,7 @@
   {
     "name": "CRM Management",
     "desc": "CRM Management for healthcare system.",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2F780d3c65828f4eddbc77630f74e9fed1?format=webp&width=800",
+    "image": "crm",
     "category": "mernstack",
     "links": {
       "code": "https://github.com/shivam13669/CRMManagement10/",
@@ -22,7 +22,7 @@
   {
     "name": "Weather App",
     "desc": "A dynamic Weather app",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2Ff3281b08daec4d89a9e1e37b1d8a5a2d?format=webp&width=800",
+    "image": "weatherapp_new",
     "category": "html",
     "links": {
       "code": "https://github.com/shivam13669/Weatherappmainfile/",
@@ -33,18 +33,18 @@
   {
     "name": "AI-chatcombo",
     "desc": "AI-powered chatbot project using JavaScript.",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2F129efc3bea7a480f9e25bc9b192a6570?format=webp&width=800",
+    "image": "aichatcombo",
     "category": "javascript",
     "links": {
       "code": "",
       "view" : ""
     }
   },
-    
+
    {
     "name": "SigmaGPT",
     "desc": "Next-gen AI assistant with advanced reasoning capabilities.",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2Faa423967a9fe498dbdf3608a87d548ee?format=webp&width=800",
+    "image": "sigmagpt",
     "category": "javascript",
     "links": {
       "code": "",
@@ -52,18 +52,18 @@
 
     }
   },
- 
-  
+
+
   {
     "name": "AI-Career-Coach",
     "desc": "AI career guidance application built using JavaScript.",
-    "image": "https://cdn.builder.io/api/v1/image/assets%2F3b0ea1cc0e534d50bec8a09682a5adaa%2F45d4e227b8d643849b354af1ca826103?format=webp&width=800",
+    "image": "aicareercoach",
     "category": "javascript",
     "links": {
       "code": "",
       "view" :""
     }
   }
-  
-  
+
+
 ]
