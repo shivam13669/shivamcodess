@@ -17,17 +17,6 @@ $(document).ready(function () {
     });
 });
 
-document.addEventListener('visibilitychange',
-    function () {
-        if (document.visibilityState === "visible") {
-            document.title = "Projects | Portfolio Shivam";
-            $("#favicon").attr("href", "https://cdn.builder.io/api/v1/image/assets%2Fb5e2cf9ea44e436484882433f20a28b0%2F5df928bff0ab45f8a3454df4d5377266?format=webp&width=800");
-        }
-        else {
-            document.title = "Come Back To Portfolio";
-            $("#favicon").attr("href", "/assets/images/favhand.png");
-        }
-    });
 
 
 // fetch projects start
