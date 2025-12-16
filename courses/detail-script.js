@@ -131,9 +131,6 @@ function displayCourseDetail(course) {
 
   const buyBtnLarge = document.getElementById('buyBtnLarge');
   if (buyBtnLarge) buyBtnLarge.onclick = () => handleBuyNow(course);
-
-  const previewBtn = document.querySelector('.btn-preview');
-  if (previewBtn) previewBtn.onclick = () => previewCourse(course);
 }
 
 function toggleCurriculum(element) {
@@ -151,10 +148,6 @@ function toggleCurriculum(element) {
 
 function handleBuyNow(course) {
   alert(`Thank you for your interest in "${course.name}"!\n\nPrice: ${course.price}\n\nPayment gateway integration coming soon. For now, you can contact us at shivam19e@gmail.com to enroll.`);
-}
-
-function previewCourse(course) {
-  alert('Preview feature coming soon!');
 }
 
 // Disable developer mode
