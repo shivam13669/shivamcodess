@@ -235,7 +235,7 @@ header .navbar ul li a:hover {
 }
 
 .course-card-content h3 {
-  font-size: 1.45rem;
+  font-size: 1.75rem;
   color: #001a4d;
   margin-bottom: 0.7rem;
   line-height: 1.4;
@@ -245,7 +245,7 @@ header .navbar ul li a:hover {
 
 .course-card-instructor {
   color: #ff6b35;
-  font-size: 1rem;
+  font-size: 1.15rem;
   margin-bottom: 1rem;
   font-weight: 600;
 }
@@ -264,12 +264,12 @@ header .navbar ul li a:hover {
 
 .course-card-reviews {
   color: #888;
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 .course-card-description {
   color: #666;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   margin-bottom: 1.5rem;
   flex-grow: 1;
   line-height: 1.6;
@@ -291,7 +291,7 @@ header .navbar ul li a:hover {
 }
 
 .course-card-duration {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   color: #666;
   display: flex;
   align-items: center;
