@@ -1255,3 +1255,21 @@ form .button-area {
   top: calc(100% - 12rem);
 }
 /* scroll top ends */
+
+/* login link styles */
+.login-link {
+  cursor: pointer !important;
+  font-size: 1.57rem !important;
+  color: #0e2431 !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  letter-spacing: 0.04rem !important;
+  transition: 0.2s !important;
+}
+
+.login-link:hover {
+  color: #011aff !important;
+  border-bottom: 0.2rem solid #011aff !important;
+  padding-bottom: 0.5rem !important;
+}
+/* login link styles ends */
