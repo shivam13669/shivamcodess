@@ -65,22 +65,35 @@ function displayCourseDetail(course) {
   const stars = '★'.repeat(Math.floor(course.rating)) + '☆'.repeat(5 - Math.floor(course.rating));
 
   document.title = `${course.name} | Portfolio Shivam`;
-  document.getElementById('courseTitle').textContent = course.name;
-  document.getElementById('courseShortDesc').textContent = course.shortDesc;
-  document.getElementById('courseImage').src = course.image;
-  document.getElementById('courseInstructor').textContent = course.instructor;
-  document.getElementById('courseRating').textContent = `${stars} ${course.rating}/5`;
-  document.getElementById('courseReviews').textContent = `${course.reviews} reviews`;
-  document.getElementById('courseDuration').textContent = course.duration;
-  document.getElementById('priceBadge').textContent = course.price;
-  document.getElementById('courseDescription').textContent = course.description;
+
+  // Safely set element content with existence checks
+  const setElementContent = (id, content) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = content;
+  };
+
+  const setElementAttr = (id, attr, value) => {
+    const el = document.getElementById(id);
+    if (el) el[attr] = value;
+  };
+
+  setElementContent('courseTitle', course.name);
+  setElementContent('courseShortDesc', course.shortDesc);
+  setElementAttr('courseImage', 'src', course.image);
+  setElementContent('courseInstructor', course.instructor);
+  setElementContent('courseRating', `${stars} ${course.rating}/5`);
+  setElementContent('courseReviews', `${course.reviews} reviews`);
+  setElementContent('courseDuration', course.duration);
+  setElementContent('priceBadge', course.price);
+  setElementContent('courseDescription', course.description);
 
   // Learn section
   let learnHtml = '';
   course.highlights.forEach(highlight => {
     learnHtml += `<li>${highlight}</li>`;
   });
-  document.getElementById('learnList').innerHTML = learnHtml;
+  const learnEl = document.getElementById('learnList');
+  if (learnEl) learnEl.innerHTML = learnHtml;
 
   // Curriculum section
   let curriculumHtml = '';
@@ -101,19 +114,26 @@ function displayCourseDetail(course) {
       </div>
     `;
   });
-  document.getElementById('curriculumList').innerHTML = curriculumHtml;
+  const curriculumEl = document.getElementById('curriculumList');
+  if (curriculumEl) curriculumEl.innerHTML = curriculumHtml;
 
   // Requirements section
   let requirementsHtml = '';
   course.requirements.forEach(requirement => {
     requirementsHtml += `<li>${requirement}</li>`;
   });
-  document.getElementById('requirementsList').innerHTML = requirementsHtml;
+  const requirementsEl = document.getElementById('requirementsList');
+  if (requirementsEl) requirementsEl.innerHTML = requirementsHtml;
 
   // Buy button handlers
-  document.getElementById('buyBtn').onclick = () => handleBuyNow(course);
-  document.getElementById('buyBtnLarge').onclick = () => handleBuyNow(course);
-  document.querySelector('.btn-preview').onclick = () => previewCourse(course);
+  const buyBtn = document.getElementById('buyBtn');
+  if (buyBtn) buyBtn.onclick = () => handleBuyNow(course);
+
+  const buyBtnLarge = document.getElementById('buyBtnLarge');
+  if (buyBtnLarge) buyBtnLarge.onclick = () => handleBuyNow(course);
+
+  const previewBtn = document.querySelector('.btn-preview');
+  if (previewBtn) previewBtn.onclick = () => previewCourse(course);
 }
 
 function toggleCurriculum(element) {
