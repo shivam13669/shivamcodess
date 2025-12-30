@@ -292,11 +292,6 @@ if (typeof ScrollReveal !== 'undefined') {
     srtop.reveal('.about .content .box-container', { delay: 200 });
     srtop.reveal('.about .content .resumebtn', { delay: 200 });
 
-
-    /* SCROLL SKILLS */
-    srtop.reveal('.skills .container', { interval: 200 });
-    srtop.reveal('.skills .container .bar', { delay: 400 });
-
     /* SCROLL COURSES */
     srtop.reveal('.courses .course-card', { interval: 200 });
 
