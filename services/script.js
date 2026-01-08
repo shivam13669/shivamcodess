@@ -21,29 +21,30 @@ async function loadServices() {
     try {
         const response = await fetch('/services/services.json');
         const services = await response.json();
-        const boxContainer = document.querySelector('.services .box-container');
-        
+        const servicesGrid = document.querySelector('.services .services-grid');
+
         services.forEach(service => {
-            const serviceBox = document.createElement('div');
-            serviceBox.className = 'box tilt';
-            serviceBox.innerHTML = `
-                <img draggable="false" src="${service.image}" alt="${service.title}" />
-                <div class="content">
-                    <div class="tag">
-                        <h3>${service.title}</h3>
-                    </div>
-                    <div class="desc">
-                        <p>${service.description}</p>
-                    </div>
+            const learningsHTML = service.learnings.map(learning =>
+                `<li><span class="arrow">→</span> ${learning}</li>`
+            ).join('');
+
+            const serviceCard = document.createElement('div');
+            serviceCard.className = 'service-card';
+            serviceCard.innerHTML = `
+                <div class="service-icon">
+                    <i class="${service.icon}"></i>
+                </div>
+                <h3 class="service-title">${service.title}</h3>
+                <p class="service-subtitle">${service.subtitle}</p>
+                <p class="service-desc">${service.description}</p>
+                <div class="service-learnings">
+                    <h4>What You'll Learn:</h4>
+                    <ul>
+                        ${learningsHTML}
+                    </ul>
                 </div>
             `;
-            boxContainer.appendChild(serviceBox);
-        });
-
-        // Initialize Vanilla Tilt
-        VanillaTilt.init(document.querySelectorAll('.services .box.tilt'), {
-            max: 5,
-            scale: 1.05
+            servicesGrid.appendChild(serviceCard);
         });
     } catch (error) {
         console.error('Error loading services:', error);
