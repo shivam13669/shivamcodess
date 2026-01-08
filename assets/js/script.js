@@ -223,6 +223,47 @@ fetchCourses().then(data => {
     showCourses(data);
 });
 
+async function fetchServices() {
+    const response = await fetch("./services/services.json");
+    const data = await response.json();
+    return data;
+}
+
+function showServices(services) {
+    const servicesContainer = document.getElementById("servicesContainer");
+    let serviceHTML = "";
+
+    services.slice(0, 3).forEach(service => {
+        serviceHTML += `
+        <div class="service-card" onclick="window.location.href='/services'" style="cursor: pointer;">
+            <i class="${service.icon} service-icon"></i>
+            <h3 class="service-title">${service.name}</h3>
+            <p class="service-category">${service.category}</p>
+            <p class="service-desc">${service.description}</p>
+            <div class="service-meta">
+                <div class="service-duration">${service.duration}</div>
+                <div class="service-level">${service.level}</div>
+            </div>
+        </div>`;
+    });
+
+    servicesContainer.innerHTML = serviceHTML;
+
+    if (typeof ScrollReveal !== 'undefined') {
+        const srtop = ScrollReveal({
+            origin: 'top',
+            distance: '80px',
+            duration: 1000,
+            reset: true
+        });
+        srtop.reveal('.services-featured .service-card', { interval: 200 });
+    }
+}
+
+fetchServices().then(data => {
+    showServices(data);
+});
+
 // <!-- tilt js effect starts -->
 if (typeof VanillaTilt !== 'undefined') {
     VanillaTilt.init(document.querySelectorAll(".tilt"), {
