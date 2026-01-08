@@ -595,6 +595,7 @@ section h2 {
   .course-actions {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1.5rem;
   }
 
   .btn-buy-now,
@@ -603,12 +604,8 @@ section h2 {
     justify-content: center;
   }
 
-  .course-price-display {
-    font-size: 2rem;
-  }
-
   .course-price-amount {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
 
   .cta-actions {
