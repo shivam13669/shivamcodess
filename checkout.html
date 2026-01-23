@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/courses/detail-style.css">
+    <link rel="stylesheet" href="/assets/css/checkout-style.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link id='favicon' rel="shortcut icon" href="https://cdn.builder.io/api/v1/image/assets%2F9fabf925f9b44231819b0bfba8d59dc0%2F6a7b9c70a34745d3a7bf25250d843f35?format=webp&width=800" type="image/x-png">
+    <title>Checkout | Design Byte</title>
+</head>
+<body>
+
+<!-- navbar starts -->
+<header>
+    <a href="/" class="logo"><i class="fab fa-node-js"></i> Design Byte</a>
+    <div id="menu" class="fas fa-bars"></div>
+    <nav class="navbar">
+        <ul>
+        <li><a href="/#home">Home</a></li>
+        <li><a href="/about-us.html">About</a></li>
+        <li><a href="/#work">Work</a></li>
+        <li><a href="/#experience">Experience</a></li>
+        <li><a href="/services">Services</a></li>
+        <li><a href="/courses">Courses</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li><a href="/login.html" class="login-link">Login</a></li>
+        </ul>
+    </nav>
+</header>
+<!-- navbar ends -->
+
+<!-- checkout section starts -->
+<section class="checkout-section">
+    <div class="checkout-container">
+        <!-- Order Summary -->
+        <div class="checkout-summary">
+            <h2>Order Summary</h2>
+            <div class="summary-content">
+                <div class="course-summary-item">
+                    <img id="courseSummaryImage" src="" alt="Course" class="course-summary-image">
+                    <div class="course-summary-details">
+                        <h3 id="courseSummaryName"></h3>
+                        <p id="courseSummaryInstructor"></p>
+                        <div class="course-summary-meta">
+                            <span id="courseSummaryDuration"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-divider"></div>
+                <div class="summary-pricing">
+                    <div class="pricing-row">
+                        <span>Course Price</span>
+                        <span id="summaryPrice"></span>
+                    </div>
+                    <div class="pricing-row total">
+                        <span>Total Amount</span>
+                        <span id="summaryTotal"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <div class="checkout-form-container">
+            <!-- Gateway Selection View -->
+            <div id="gatewaySelectionView">
+                <h2>Choose Payment Method</h2>
+                <p class="form-subtitle">Select your preferred payment gateway</p>
+
+                <div class="gateways-grid">
+                    <!-- Razorpay Gateway -->
+                    <div class="gateway-card" onclick="selectPaymentGateway('razorpay')">
+                        <div class="gateway-logo-box razorpay-bg">
+                            <img src="/assets/images/payment/razorpay-logo.svg" alt="Razorpay" class="gateway-logo-img">
+                        </div>
+                        <h3>Razorpay</h3>
+                        <p class="gateway-features">Credit/Debit Card, UPI, Wallet</p>
+                        <span class="gateway-badge">Instant Settlement</span>
+                    </div>
+
+                    <!-- PhonePe Gateway -->
+                    <div class="gateway-card" onclick="selectPaymentGateway('phonepe')">
+                        <div class="gateway-logo-box phonepe-bg">
+                            <img src="/assets/images/payment/phonepe-logo.svg" alt="PhonePe" class="gateway-logo-img">
+                        </div>
+                        <h3>PhonePe</h3>
+                        <p class="gateway-features">UPI, Postpaid, Wallet</p>
+                        <span class="gateway-badge">Fastest & Safest</span>
+                    </div>
+
+                    <!-- Cashfree Gateway -->
+                    <div class="gateway-card" onclick="selectPaymentGateway('cashfree')">
+                        <div class="gateway-logo-box cashfree-bg">
+                            <img src="/assets/images/payment/cashfree-logo.svg" alt="Cashfree" class="gateway-logo-img">
+                        </div>
+                        <h3>Cashfree</h3>
+                        <p class="gateway-features">Card, Net Banking, UPI</p>
+                        <span class="gateway-badge">100% Secure</span>
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <p class="secure-text">
+                        <i class="fas fa-lock"></i> All payments are secure and encrypted
+                    </p>
+                </div>
+            </div>
+
+            <!-- Customer Details Form View -->
+            <div id="customerDetailsView" style="display: none;">
+                <div class="form-back-btn">
+                    <button type="button" onclick="backToGatewaySelection()" class="btn-back-text">
+                        <i class="fas fa-arrow-left"></i> Back to Payment Methods
+                    </button>
+                </div>
+
+                <h2>Enter Your Details</h2>
+                <p class="form-subtitle">We need this information to process your payment</p>
+
+                <form id="customerForm" class="customer-form">
+                    <div class="form-group">
+                        <label for="customerName">Full Name *</label>
+                        <input type="text" id="customerName" name="name" placeholder="Enter your full name" required>
+                        <span class="form-error" id="nameError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerEmail">Email Address *</label>
+                        <input type="email" id="customerEmail" name="email" placeholder="Enter your email address" required>
+                        <span class="form-error" id="emailError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customerPhone">Phone Number (10 digits) *</label>
+                        <input type="tel" id="customerPhone" name="phone" placeholder="Enter your 10-digit phone number" maxlength="10" required>
+                        <span class="form-error" id="phoneError"></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="backToGatewaySelection()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="submit" class="btn-primary" id="submitDetailsBtn">
+                            <i class="fas fa-arrow-right"></i> Continue to Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- checkout section ends -->
+
+<!-- Payment Status Modal -->
+<div class="payment-status-overlay" id="paymentStatusOverlay">
+    <div class="payment-status-modal">
+        <div id="statusContent">
+            <!-- Content will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- scroll top btn -->
+<a href="#checkout-section" class="fas fa-angle-up" id="scroll-top"></a>
+
+<!-- ==== ALL MAJOR JAVASCRIPT CDNS STARTS ==== -->
+<!-- jquery cdn -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- scroll reveal anim -->
+<script src="https://unpkg.com/scrollreveal"></script>
+
+<!-- ==== ALL MAJOR JAVASCRIPT CDNS ENDS ==== -->
+
+<script src="/assets/js/checkout-script.js"></script>
+
+</body>
+</html>
