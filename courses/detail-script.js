@@ -147,8 +147,9 @@ function toggleCurriculum(element) {
   }
 }
 
-// Store current course for payment
+// Store current course and payment context
 let currentCourseForPayment = null;
+let currentPaymentGateway = null;
 
 function handleBuyNow(course) {
   currentCourseForPayment = course;
@@ -159,6 +160,7 @@ function openPaymentModal() {
   const overlay = document.getElementById('paymentModalOverlay');
   if (overlay) {
     overlay.classList.add('active');
+    resetPaymentModal();
   }
 }
 
@@ -167,6 +169,13 @@ function closePaymentModal() {
   if (overlay) {
     overlay.classList.remove('active');
   }
+  resetPaymentModal();
+}
+
+function resetPaymentModal() {
+  showGatewaySelection();
+  document.getElementById('customerForm').reset();
+  clearFormErrors();
 }
 
 // Close modal when clicking outside
