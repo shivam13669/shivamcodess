@@ -270,13 +270,24 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
-async function selectPaymentGateway(gateway) {
+// Select payment gateway and show customer form
+function selectPaymentGateway(gateway) {
   if (!currentCourseForPayment) {
-    alert('Course information not found');
+    showPaymentStatus('error', 'Course Not Found', 'Course information was not found. Please try again.');
     return;
   }
 
-  // Show loading state
+  currentPaymentGateway = gateway;
+  showCustomerDetailsForm();
+}
+
+// Proceed to payment gateway with customer details
+async function proceedToPaymentGateway(customerDetails) {
+  if (!currentCourseForPayment || !currentPaymentGateway) {
+    showPaymentStatus('error', 'Payment Error', 'Payment initialization failed. Please try again.');
+    return;
+  }
+
   const modal = document.querySelector('.payment-modal');
   if (modal) modal.classList.add('loading');
 
@@ -285,13 +296,9 @@ async function selectPaymentGateway(gateway) {
     const priceText = currentCourseForPayment.price;
     const amount = parseFloat(priceText.replace('₹', '').trim());
 
-    // Get customer details (you might want to show a form for this)
-    const customerDetails = getCustomerDetails();
-
-    if (!customerDetails) {
-      if (modal) modal.classList.remove('loading');
-      return;
-    }
+    // Store for later verification (especially for redirects)
+    localStorage.setItem('current_amount', amount);
+    localStorage.setItem('current_customer_email', customerDetails.email);
 
     // Call backend API to create order
     const response = await fetch('http://localhost:5000/api/payment/create-order', {
@@ -301,7 +308,7 @@ async function selectPaymentGateway(gateway) {
       },
       body: JSON.stringify({
         amount: amount,
-        gateway: gateway,
+        gateway: currentPaymentGateway,
         customer: customerDetails,
         description: `Payment for ${currentCourseForPayment.name}`
       })
@@ -322,33 +329,13 @@ async function selectPaymentGateway(gateway) {
     if (modal) modal.classList.remove('loading');
 
     // Handle different gateways
-    handleGatewayPayment(gateway, data.order, amount, customerDetails);
+    handleGatewayPayment(currentPaymentGateway, data.order, amount, customerDetails);
 
   } catch (error) {
     console.error('Payment error:', error);
     if (modal) modal.classList.remove('loading');
-    alert(`Payment initialization failed: ${error.message}`);
+    showPaymentStatus('error', 'Payment Initialization Failed', error.message);
   }
-}
-
-function getCustomerDetails() {
-  // Show a simple prompt or form to get customer details
-  const name = prompt('Enter your full name:');
-  if (!name) return null;
-
-  const email = prompt('Enter your email address:');
-  if (!email || !email.includes('@')) {
-    alert('Please enter a valid email');
-    return null;
-  }
-
-  const phone = prompt('Enter your 10-digit phone number:');
-  if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
-    alert('Please enter a valid 10-digit phone number');
-    return null;
-  }
-
-  return { name, email, phone };
 }
 
 function handleGatewayPayment(gateway, order, amount, customer) {
