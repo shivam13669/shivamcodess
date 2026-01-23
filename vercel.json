@@ -9,10 +9,6 @@
     {
       "source": "/experience",
       "destination": "/experience/index.html"
-    },
-    {
-      "source": "/checkout",
-      "destination": "/checkout.html"
     }
   ]
 }
