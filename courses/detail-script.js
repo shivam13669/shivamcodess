@@ -147,8 +147,254 @@ function toggleCurriculum(element) {
   }
 }
 
+// Store current course for payment
+let currentCourseForPayment = null;
+
 function handleBuyNow(course) {
-  alert(`Thank you for your interest in "${course.name}"!\n\nPrice: ${course.price}\n\nPayment gateway integration coming soon. For now, you can contact us at shivam19e@gmail.com to enroll.`);
+  currentCourseForPayment = course;
+  openPaymentModal();
+}
+
+function openPaymentModal() {
+  const overlay = document.getElementById('paymentModalOverlay');
+  if (overlay) {
+    overlay.classList.add('active');
+  }
+}
+
+function closePaymentModal() {
+  const overlay = document.getElementById('paymentModalOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+  const overlay = document.getElementById('paymentModalOverlay');
+  if (event.target === overlay) {
+    closePaymentModal();
+  }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    closePaymentModal();
+  }
+});
+
+async function selectPaymentGateway(gateway) {
+  if (!currentCourseForPayment) {
+    alert('Course information not found');
+    return;
+  }
+
+  // Show loading state
+  const modal = document.querySelector('.payment-modal');
+  if (modal) modal.classList.add('loading');
+
+  try {
+    // Get course price
+    const priceText = currentCourseForPayment.price;
+    const amount = parseFloat(priceText.replace('₹', '').trim());
+
+    // Get customer details (you might want to show a form for this)
+    const customerDetails = getCustomerDetails();
+
+    if (!customerDetails) {
+      if (modal) modal.classList.remove('loading');
+      return;
+    }
+
+    // Call backend API to create order
+    const response = await fetch('http://localhost:5000/api/payment/create-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: amount,
+        gateway: gateway,
+        customer: customerDetails,
+        description: `Payment for ${currentCourseForPayment.name}`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to create order');
+    }
+
+    // Close modal before opening payment gateway
+    closePaymentModal();
+    if (modal) modal.classList.remove('loading');
+
+    // Handle different gateways
+    handleGatewayPayment(gateway, data.order, amount, customerDetails);
+
+  } catch (error) {
+    console.error('Payment error:', error);
+    if (modal) modal.classList.remove('loading');
+    alert(`Payment initialization failed: ${error.message}`);
+  }
+}
+
+function getCustomerDetails() {
+  // Show a simple prompt or form to get customer details
+  const name = prompt('Enter your full name:');
+  if (!name) return null;
+
+  const email = prompt('Enter your email address:');
+  if (!email || !email.includes('@')) {
+    alert('Please enter a valid email');
+    return null;
+  }
+
+  const phone = prompt('Enter your 10-digit phone number:');
+  if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+    alert('Please enter a valid 10-digit phone number');
+    return null;
+  }
+
+  return { name, email, phone };
+}
+
+function handleGatewayPayment(gateway, order, amount, customer) {
+  switch(gateway) {
+    case 'razorpay':
+      handleRazorpayPayment(order, amount, customer);
+      break;
+    case 'phonepe':
+      handlePhonePePayment(order);
+      break;
+    case 'cashfree':
+      handleCashfreePayment(order);
+      break;
+  }
+}
+
+function handleRazorpayPayment(order, amount, customer) {
+  // Load Razorpay script if not loaded
+  if (!window.Razorpay) {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => openRazorpayCheckout(order, amount, customer);
+    document.head.appendChild(script);
+  } else {
+    openRazorpayCheckout(order, amount, customer);
+  }
+}
+
+function openRazorpayCheckout(order, amount, customer) {
+  const options = {
+    key: order.razorpayKey,
+    amount: order.amount,
+    currency: 'INR',
+    order_id: order.orderId,
+    customer_details: {
+      name: customer.name,
+      email: customer.email,
+      contact: customer.phone
+    },
+    handler: async function(response) {
+      await verifyRazorpayPayment(order.orderId, response.razorpay_payment_id, response.razorpay_signature);
+    },
+    prefill: {
+      name: customer.name,
+      email: customer.email,
+      contact: customer.phone
+    },
+    theme: {
+      color: '#2b3dda'
+    },
+    modal: {
+      ondismiss: function() {
+        console.log('Payment modal closed');
+      }
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
+
+async function verifyRazorpayPayment(orderId, paymentId, signature) {
+  try {
+    const response = await fetch('http://localhost:5000/api/payment/verify-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        gateway: 'razorpay',
+        orderId: orderId,
+        paymentId: paymentId,
+        signature: signature
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showPaymentSuccess('Razorpay', data);
+    } else {
+      alert('Payment verification failed: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Verification error:', error);
+    alert('Payment verification failed');
+  }
+}
+
+function handlePhonePePayment(order) {
+  if (order.redirectUrl) {
+    // Store transaction ID for later verification
+    localStorage.setItem('phonepe_transaction_id', order.transactionId);
+    localStorage.setItem('phonepe_amount', localStorage.getItem('current_amount'));
+
+    // Redirect to PhonePe
+    window.location.href = order.redirectUrl;
+  } else {
+    alert('Failed to get PhonePe payment URL');
+  }
+}
+
+function handleCashfreePayment(order) {
+  if (order.paymentLink) {
+    // Store order ID for later verification
+    localStorage.setItem('cashfree_order_id', order.orderId);
+
+    // Redirect to Cashfree
+    window.location.href = order.paymentLink;
+  } else {
+    alert('Failed to get Cashfree payment link');
+  }
+}
+
+function showPaymentSuccess(gateway, paymentData) {
+  const message = `
+✅ Payment Successful!
+
+Gateway: ${gateway}
+Amount: ₹${paymentData.amount}
+Status: ${paymentData.status}
+
+You will be enrolled in the course shortly.
+Check your email for further instructions.
+  `;
+
+  alert(message);
+
+  // Redirect to courses page after 2 seconds
+  setTimeout(() => {
+    window.location.href = '/courses';
+  }, 2000);
 }
 
 // Disable developer mode
