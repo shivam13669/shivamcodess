@@ -128,6 +128,67 @@
 <!-- scroll top btn -->
 <a href="#courseHero" class="fas fa-angle-up" id="scroll-top"></a>
 
+<!-- Payment Gateway Selection Modal -->
+<div class="payment-modal-overlay" id="paymentModalOverlay">
+    <div class="payment-modal">
+        <button class="modal-close-btn" onclick="closePaymentModal()">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="modal-header">
+            <h2>Choose Payment Method</h2>
+            <p>Select your preferred payment gateway</p>
+        </div>
+
+        <div class="gateways-grid">
+            <!-- Razorpay Gateway -->
+            <div class="gateway-card" onclick="selectPaymentGateway('razorpay')">
+                <div class="gateway-logo-box razorpay-bg">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <rect width="80" height="80" fill="white"/>
+                        <text x="40" y="45" font-size="24" font-weight="bold" text-anchor="middle" fill="#0055FF">RAZORPAY</text>
+                    </svg>
+                </div>
+                <h3>Razorpay</h3>
+                <p class="gateway-features">Credit/Debit Card, UPI, Wallet</p>
+                <span class="gateway-badge">Instant Settlement</span>
+            </div>
+
+            <!-- PhonePe Gateway -->
+            <div class="gateway-card" onclick="selectPaymentGateway('phonepe')">
+                <div class="gateway-logo-box phonepe-bg">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <rect width="80" height="80" fill="white"/>
+                        <text x="40" y="45" font-size="24" font-weight="bold" text-anchor="middle" fill="#5F3EFF">PHONEPE</text>
+                    </svg>
+                </div>
+                <h3>PhonePe</h3>
+                <p class="gateway-features">UPI, Postpaid, Wallet</p>
+                <span class="gateway-badge">Fastest & Safest</span>
+            </div>
+
+            <!-- Cashfree Gateway -->
+            <div class="gateway-card" onclick="selectPaymentGateway('cashfree')">
+                <div class="gateway-logo-box cashfree-bg">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <rect width="80" height="80" fill="white"/>
+                        <text x="40" y="45" font-size="24" font-weight="bold" text-anchor="middle" fill="#1B5E20">CASHFREE</text>
+                    </svg>
+                </div>
+                <h3>Cashfree</h3>
+                <p class="gateway-features">Card, Net Banking, UPI</p>
+                <span class="gateway-badge">100% Secure</span>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <p class="secure-text">
+                <i class="fas fa-lock"></i> All payments are secure and encrypted
+            </p>
+        </div>
+    </div>
+</div>
+
 <!-- ==== ALL MAJOR JAVASCRIPT CDNS STARTS ==== -->
 <!-- jquery cdn -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
