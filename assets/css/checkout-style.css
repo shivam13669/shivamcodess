@@ -454,12 +454,12 @@ hr {
 
   .method {
     padding: 14px;
-    min-height: 150px;
+    min-height: 80px;
   }
 
   .method img {
-    max-width: 85%;
-    max-height: 85%;
+    width: 100%;
+    height: 100%;
   }
 
   .course-summary img {
