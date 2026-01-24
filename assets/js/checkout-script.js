@@ -53,7 +53,7 @@ function displayCheckoutData(course) {
   document.getElementById('summaryTotal').textContent = course.price;
 
   // Update pay button with lock icon and price
-  document.getElementById('payNowBtn').textContent = `🔒 Pay ${course.price}`;
+  document.getElementById('payNowBtn').innerHTML = `<i class="fas fa-lock"></i> Pay ${course.price}`;
 }
 
 function setupFormHandlers() {
