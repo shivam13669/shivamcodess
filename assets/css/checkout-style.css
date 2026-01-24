@@ -519,7 +519,8 @@ hr {
   }
 
   .method img {
-    height: 30px;
+    max-width: 110px;
+    max-height: 30px;
   }
 
   .pay-btn {
