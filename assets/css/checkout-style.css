@@ -457,11 +457,15 @@ hr {
 
   .method {
     padding: 18px;
+    height: 72px;
+    overflow: hidden;
   }
 
   .method img {
     width: 32px;
     height: 32px;
+    max-width: 32px;
+    max-height: 32px;
   }
 
   .course-summary img {
