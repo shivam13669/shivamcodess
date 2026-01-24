@@ -454,7 +454,8 @@ hr {
   }
 
   .method img {
-    height: 35px;
+    max-width: 110px;
+    max-height: 30px;
   }
 
   .course-summary img {
