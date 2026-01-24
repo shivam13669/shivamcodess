@@ -63,6 +63,20 @@ function setupFormHandlers() {
       e.preventDefault();
       await handleCheckoutSubmit();
     });
+
+    // Real-time validation listeners
+    const nameInput = document.getElementById('customerName');
+    const emailInput = document.getElementById('customerEmail');
+    const phoneInput = document.getElementById('customerPhone');
+
+    nameInput.addEventListener('blur', validateNameField);
+    nameInput.addEventListener('input', validateNameField);
+
+    emailInput.addEventListener('blur', validateEmailField);
+    emailInput.addEventListener('input', validateEmailField);
+
+    phoneInput.addEventListener('blur', validatePhoneField);
+    phoneInput.addEventListener('input', validatePhoneField);
   }
 }
 
@@ -143,42 +157,90 @@ async function handleCheckoutSubmit() {
   }
 }
 
-function validateCheckoutForm() {
-  const name = document.getElementById('customerName').value.trim();
-  const email = document.getElementById('customerEmail').value.trim();
-  const phone = document.getElementById('customerPhone').value.trim();
-  const gateway = window.selectedGateway;
-  
-  let isValid = true;
-  let errorMessage = '';
+function validateNameField() {
+  const nameInput = document.getElementById('customerName');
+  const nameError = document.getElementById('nameError');
+  const name = nameInput.value.trim();
 
-  if (!name || name.length < 3) {
-    errorMessage += 'Please enter a valid name (minimum 3 characters)\n';
-    isValid = false;
+  if (!name) {
+    setFieldError(nameInput, nameError, 'Name is required');
+    return false;
+  } else if (name.length < 3) {
+    setFieldError(nameInput, nameError, 'Name must be at least 3 characters');
+    return false;
+  } else {
+    clearFieldError(nameInput, nameError);
+    return true;
   }
+}
 
+function validateEmailField() {
+  const emailInput = document.getElementById('customerEmail');
+  const emailError = document.getElementById('emailError');
+  const email = emailInput.value.trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
-    errorMessage += 'Please enter a valid email address\n';
-    isValid = false;
-  }
 
+  if (!email) {
+    setFieldError(emailInput, emailError, 'Email is required');
+    return false;
+  } else if (!emailRegex.test(email)) {
+    setFieldError(emailInput, emailError, 'Please enter a valid email address');
+    return false;
+  } else {
+    clearFieldError(emailInput, emailError);
+    return true;
+  }
+}
+
+function validatePhoneField() {
+  const phoneInput = document.getElementById('customerPhone');
+  const phoneError = document.getElementById('phoneError');
+  const phone = phoneInput.value.trim();
   const phoneRegex = /^[6-9]\d{9}$/;
-  if (!phone || !phoneRegex.test(phone)) {
-    errorMessage += 'Please enter a valid 10-digit phone number\n';
-    isValid = false;
-  }
 
+  if (!phone) {
+    setFieldError(phoneInput, phoneError, 'Phone number is required');
+    return false;
+  } else if (!phoneRegex.test(phone)) {
+    setFieldError(phoneInput, phoneError, 'Enter a valid 10-digit phone number (starts with 6-9)');
+    return false;
+  } else {
+    clearFieldError(phoneInput, phoneError);
+    return true;
+  }
+}
+
+function setFieldError(inputElement, errorElement, message) {
+  inputElement.classList.add('input-error');
+  errorElement.textContent = message;
+  errorElement.classList.add('show-error');
+}
+
+function clearFieldError(inputElement, errorElement) {
+  inputElement.classList.remove('input-error');
+  errorElement.textContent = '';
+  errorElement.classList.remove('show-error');
+}
+
+function validateCheckoutForm() {
+  const nameValid = validateNameField();
+  const emailValid = validateEmailField();
+  const phoneValid = validatePhoneField();
+
+  const gateway = window.selectedGateway;
+  const gatewayError = document.getElementById('gatewayError');
+
+  let gatewayValid = true;
   if (!gateway) {
-    errorMessage += 'Please select a payment method\n';
-    isValid = false;
+    gatewayError.textContent = 'Please select a payment method';
+    gatewayError.classList.add('show-error');
+    gatewayValid = false;
+  } else {
+    gatewayError.textContent = '';
+    gatewayError.classList.remove('show-error');
   }
 
-  if (!isValid) {
-    alert(errorMessage.trim());
-  }
-
-  return isValid;
+  return nameValid && emailValid && phoneValid && gatewayValid;
 }
 
 function handleGatewayPayment(gateway, order, amount, customer) {

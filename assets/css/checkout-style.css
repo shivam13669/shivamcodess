@@ -81,6 +81,28 @@ body {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+.form-group input.input-error {
+  border-color: #dc2626;
+}
+
+.form-group input.input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.form-error {
+  display: none;
+  font-size: 13px;
+  color: #dc2626;
+  margin-top: 6px;
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+.form-error.show-error {
+  display: block;
+}
+
 /* PAYMENT SECTION */
 .section {
   margin-top: 30px;
