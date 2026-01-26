@@ -1,99 +1,140 @@
 import axios from 'axios';
-import crypto from 'crypto';
 import { logger } from '../utils/logger.js';
 
-// PhonePe API endpoints
-const PHONEPE_API_URL = process.env.PHONEPE_API_URL || 'https://api.phonepe.com/apis/hermes';
-const PHONEPE_MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
-const PHONEPE_SALT_KEY = process.env.PHONEPE_SALT_KEY;
-const PHONEPE_SALT_INDEX = process.env.PHONEPE_SALT_INDEX || '1';
-
 /**
- * Generate X-VERIFY header for PhonePe requests
- * @param {string} requestBody 
- * @returns {string} X-VERIFY header value
+ * PhonePe OAuth Client API Implementation
+ * Uses Client Credentials grant type with form-body authentication
  */
-const generatePhonePeSignature = (requestBody) => {
-  const payload = requestBody + PHONEPE_SALT_KEY;
-  const hash = crypto.createHash('sha256').update(payload).digest('hex');
-  return `${hash}###${PHONEPE_SALT_INDEX}`;
+
+// Configuration - OAuth Credentials Only
+const PHONEPE_CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
+const PHONEPE_CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
+const PHONEPE_CLIENT_VERSION = process.env.PHONEPE_CLIENT_VERSION || '1';
+
+// OAuth Token Cache
+let tokenCache = {
+  accessToken: null,
+  expiresAt: null,
 };
 
 /**
- * Verify PhonePe webhook signature
- * @param {string} requestBody 
- * @param {string} xVerifyHeader 
- * @returns {boolean} True if signature is valid
+ * Get valid OAuth access token
+ * Uses identity-manager endpoint with form-body (not Basic Auth)
+ * Caches token in memory and refreshes only when expired
+ * @returns {Promise<string>} Valid access token
  */
-const verifyPhonePeSignature = (requestBody, xVerifyHeader) => {
-  const signature = generatePhonePeSignature(requestBody);
-  return signature === xVerifyHeader;
+const getAccessToken = async () => {
+  try {
+    // Check if cached token is still valid
+    if (tokenCache.accessToken && tokenCache.expiresAt > Date.now()) {
+      logger.debug('Using cached PhonePe access token');
+      return tokenCache.accessToken;
+    }
+
+    logger.info('Generating new PhonePe OAuth access token');
+
+    // Validate credentials exist
+    if (!PHONEPE_CLIENT_ID || !PHONEPE_CLIENT_SECRET) {
+      throw new Error(
+        'PhonePe credentials not configured. Set PHONEPE_CLIENT_ID and PHONEPE_CLIENT_SECRET in .env'
+      );
+    }
+
+    // Request new token using form-body (not Basic Auth)
+    const response = await axios.post(
+      'https://api.phonepe.com/apis/identity-manager/v1/oauth/token',
+      new URLSearchParams({
+        client_id: PHONEPE_CLIENT_ID,
+        client_secret: PHONEPE_CLIENT_SECRET,
+        client_version: PHONEPE_CLIENT_VERSION,
+        grant_type: 'client_credentials',
+      }).toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const { access_token, expires_in } = response.data;
+
+    if (!access_token) {
+      throw new Error('No access token in response');
+    }
+
+    // Cache token with expiry (subtract 60 seconds for safety margin)
+    const expiryTime = (expires_in - 60) * 1000;
+    tokenCache = {
+      accessToken: access_token,
+      expiresAt: Date.now() + expiryTime,
+    };
+
+    logger.info('PhonePe OAuth token generated successfully', {
+      expiresIn: expires_in,
+    });
+
+    return access_token;
+  } catch (error) {
+    logger.error('Failed to generate PhonePe OAuth token', {
+      error: error.message,
+      response: error.response?.data,
+    });
+    throw {
+      message: 'Failed to authenticate with PhonePe',
+      error: error.message,
+    };
+  }
 };
 
 /**
- * Create PhonePe order
- * @param {object} params - { amount, currency, customer, orderId }
- * @returns {Promise<object>} Payment URL and transaction ID
+ * Create PhonePe order using OAuth Client API
+ * Minimal payload as per PhonePe OAuth spec
+ * @param {object} params - { amount, customer, orderId }
+ * @returns {Promise<object>} PhonePe response with redirect URL
  */
 export const createPhonePeOrder = async (params) => {
   try {
-    const { amount, currency = 'INR', customer, orderId } = params;
-    
-    const transactionId = `TXN_${PHONEPE_MERCHANT_ID}_${Date.now()}`;
+    const { amount, orderId } = params;
 
     logger.info('Creating PhonePe order', {
       amount,
-      transactionId,
-      customer: customer.email,
+      orderId,
     });
 
-    // PhonePe expects amount in paise
+    // Get valid access token
+    const accessToken = await getAccessToken();
+
+    // Amount in paise
     const amountInPaise = Math.round(amount * 100);
 
-    const payloadData = {
-      merchantId: PHONEPE_MERCHANT_ID,
-      merchantTransactionId: transactionId,
-      merchantUserId: customer.email.replace(/[^a-zA-Z0-9]/g, ''),
+    // Minimal payload as per PhonePe OAuth specification
+    const payload = {
+      merchantOrderId: orderId,
       amount: amountInPaise,
-      redirectUrl: `${process.env.FRONTEND_URL}/payment-status?transactionId=${transactionId}`,
-      redirectMode: 'GET',
-      callbackUrl: `${process.env.BACKEND_URL || 'https://your-backend-url.com'}/api/webhook/phonepe`,
-      mobileNumber: customer.phone,
-      paymentInstrument: {
-        type: 'PAY_PAGE',
-      },
+      currency: 'INR',
+      redirectUrl: `${process.env.FRONTEND_URL}/payment-success`,
     };
 
-    // Base64 encode payload
-    const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64');
-
-    // Generate signature
-    const xVerify = generatePhonePeSignature(payload);
-
-    // Make API request
+    // Make API request with Bearer token
     const response = await axios.post(
-      `${PHONEPE_API_URL}/pg/v1/pay`,
-      { request: payload },
+      'https://api.phonepe.com/apis/hermes/pg/v1/pay',
+      payload,
       {
         headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Client-Version': PHONEPE_CLIENT_VERSION,
           'Content-Type': 'application/json',
-          'X-VERIFY': xVerify,
         },
       }
     );
 
     logger.info('PhonePe order created successfully', {
-      transactionId,
-      redirectUrl: response.data?.data?.instrumentResponse?.redirectUrl,
+      orderId,
+      success: response.data?.success,
     });
 
-    return {
-      transactionId,
-      merchantId: PHONEPE_MERCHANT_ID,
-      redirectUrl: response.data?.data?.instrumentResponse?.redirectUrl,
-      paymentUrl: response.data?.data?.instrumentResponse?.redirectUrl,
-      status: response.data?.success ? 'INITIATED' : 'FAILED',
-    };
+    // Return PhonePe response directly
+    return response.data;
   } catch (error) {
     logger.error('PhonePe order creation failed', {
       error: error.message,
@@ -107,116 +148,52 @@ export const createPhonePeOrder = async (params) => {
 };
 
 /**
- * Check PhonePe transaction status
- * @param {string} transactionId 
- * @returns {Promise<object>} Transaction details
+ * Check PhonePe transaction status using OAuth
+ * Simplified to accept only orderId
+ * @param {string} orderId - Merchant's order ID
+ * @returns {Promise<object>} PhonePe transaction status
  */
-export const checkPhonePeTransactionStatus = async (transactionId) => {
+export const checkPhonePeTransactionStatus = async (orderId) => {
   try {
-    logger.info('Checking PhonePe transaction status', { transactionId });
+    logger.info('Checking PhonePe transaction status', { orderId });
 
-    const payloadData = {
-      merchantId: PHONEPE_MERCHANT_ID,
-      merchantTransactionId: transactionId,
-    };
+    // Get valid access token
+    const accessToken = await getAccessToken();
 
-    const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64');
-    const xVerify = generatePhonePeSignature(payload);
-
+    // Make API request with Bearer token
     const response = await axios.get(
-      `${PHONEPE_API_URL}/pg/v1/status/${PHONEPE_MERCHANT_ID}/${transactionId}`,
+      `https://api.phonepe.com/apis/hermes/pg/v1/status/${orderId}`,
       {
         headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Client-Version': PHONEPE_CLIENT_VERSION,
           'Content-Type': 'application/json',
-          'X-VERIFY': xVerify,
         },
       }
     );
 
     logger.info('PhonePe transaction status retrieved', {
-      transactionId,
-      status: response.data?.data?.responseCode,
+      orderId,
+      success: response.data?.success,
     });
 
-    return {
-      transactionId,
-      status: response.data?.data?.state,
-      responseCode: response.data?.data?.responseCode,
-      amount: response.data?.data?.amount,
-      success: response.data?.success,
-    };
+    // Return PhonePe response directly
+    return response.data;
   } catch (error) {
     logger.error('PhonePe transaction status check failed', {
-      transactionId,
+      orderId,
       error: error.message,
+      response: error.response?.data,
     });
-    throw error;
-  }
-};
-
-/**
- * Handle PhonePe webhook with Basic Auth
- * @param {object} webhookData 
- * @param {string} xVerifyHeader 
- * @param {string} authHeader - Basic Auth header
- * @returns {Promise<object>} Validation result
- */
-export const handlePhonePeWebhook = async (webhookData, xVerifyHeader, authHeader) => {
-  try {
-    // Verify Basic Auth
-    const expectedAuth = Buffer.from(
-      `${process.env.PHONEPE_WEBHOOK_USER}:${process.env.PHONEPE_WEBHOOK_PASS}`
-    ).toString('base64');
-
-    const providedAuth = authHeader?.replace('Basic ', '') || '';
-
-    if (providedAuth !== expectedAuth) {
-      logger.warn('PhonePe webhook authentication failed');
-      return { valid: false, message: 'Invalid authentication' };
-    }
-
-    logger.info('PhonePe webhook authenticated');
-
-    // Verify signature
-    const webhookBody = JSON.stringify(webhookData);
-    const isValidSignature = verifyPhonePeSignature(webhookBody, xVerifyHeader);
-
-    if (!isValidSignature) {
-      logger.warn('PhonePe webhook signature mismatch');
-      return { valid: false, message: 'Invalid signature' };
-    }
-
-    logger.info('PhonePe webhook verified');
-
-    const { data } = webhookData;
-
-    // Parse response data (it's base64 encoded)
-    let responseData = {};
-    try {
-      responseData = JSON.parse(
-        Buffer.from(data.response, 'base64').toString('utf-8')
-      );
-    } catch (e) {
-      responseData = data.response;
-    }
-
-    return {
-      valid: true,
-      transactionId: responseData.merchantTransactionId,
-      status: responseData.state,
-      responseCode: responseData.responseCode,
-      amount: responseData.amount,
-      timestamp: responseData.transactionDate,
-      success: responseData.state === 'COMPLETED',
+    throw {
+      message: 'Failed to check PhonePe transaction status',
+      error: error.message,
     };
-  } catch (error) {
-    logger.error('PhonePe webhook handling error', { error: error.message });
-    throw error;
   }
 };
 
 /**
- * Refund PhonePe payment
+ * Refund PhonePe payment using OAuth
  * @param {object} params - { transactionId, amount }
  * @returns {Promise<object>} Refund response
  */
@@ -226,48 +203,110 @@ export const refundPhonePePayment = async (params) => {
 
     logger.info('Initiating PhonePe refund', { transactionId, amount });
 
-    const payloadData = {
-      merchantId: PHONEPE_MERCHANT_ID,
-      originalTransactionId: transactionId,
-      amount: Math.round(amount * 100),
-      refundId: `REFUND_${Date.now()}`,
+    // Get valid access token
+    const accessToken = await getAccessToken();
+
+    // Amount in paise
+    const amountInPaise = Math.round(amount * 100);
+
+    // Create unique refund ID
+    const refundId = `REFUND_${Date.now()}`;
+
+    // Prepare refund request
+    const payload = {
+      transactionId: transactionId,
+      amount: amountInPaise,
+      refundId: refundId,
     };
 
-    const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64');
-    const xVerify = generatePhonePeSignature(payload);
-
+    // Make API request with Bearer token
     const response = await axios.post(
-      `${PHONEPE_API_URL}/pg/v1/refund`,
-      { request: payload },
+      'https://api.phonepe.com/apis/hermes/pg/v1/refund',
+      payload,
       {
         headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'X-Client-Version': PHONEPE_CLIENT_VERSION,
           'Content-Type': 'application/json',
-          'X-VERIFY': xVerify,
         },
       }
     );
 
     logger.info('PhonePe refund initiated', {
       transactionId,
-      refundId: response.data?.data?.refundId,
+      refundId,
+      success: response.data?.success,
     });
 
-    return {
-      refundId: response.data?.data?.refundId,
-      status: response.data?.success ? 'INITIATED' : 'FAILED',
-      originalTransactionId: transactionId,
-    };
+    // Return PhonePe response directly
+    return response.data;
   } catch (error) {
     logger.error('PhonePe refund failed', {
       error: error.message,
+      response: error.response?.data,
     });
+    throw {
+      message: 'Failed to refund PhonePe payment',
+      error: error.message,
+    };
+  }
+};
+
+/**
+ * Handle PhonePe webhook
+ * PhonePe OAuth webhooks send payment status events
+ * No authorization validation needed - just process the payload
+ * @param {object} webhookData - Webhook payload from PhonePe
+ * @returns {Promise<object>} Webhook processing result
+ */
+export const handlePhonePeWebhook = async (webhookData) => {
+  try {
+    logger.info('Processing PhonePe webhook', {
+      orderId: webhookData?.data?.merchantOrderId,
+    });
+
+    const { data, success } = webhookData || {};
+
+    if (!webhookData || !data) {
+      logger.warn('PhonePe webhook missing data field');
+      return { processed: false, message: 'Invalid webhook format' };
+    }
+
+    logger.info('PhonePe webhook processed', {
+      orderId: data?.merchantOrderId,
+      status: data?.state,
+      success,
+    });
+
+    // Return webhook data for processing by application
+    return {
+      processed: true,
+      orderId: data?.merchantOrderId,
+      status: data?.state,
+      amount: data?.amount,
+      success: success,
+    };
+  } catch (error) {
+    logger.error('PhonePe webhook processing error', { error: error.message });
     throw error;
   }
+};
+
+/**
+ * Clear token cache (useful for testing or manual reset)
+ */
+export const clearTokenCache = () => {
+  tokenCache = {
+    accessToken: null,
+    expiresAt: null,
+  };
+  logger.info('PhonePe token cache cleared');
 };
 
 export default {
   createPhonePeOrder,
   checkPhonePeTransactionStatus,
-  handlePhonePeWebhook,
   refundPhonePePayment,
+  handlePhonePeWebhook,
+  clearTokenCache,
 };

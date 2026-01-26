@@ -11,6 +11,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Set environment defaults
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+// Warn if FRONTEND_URL is not configured
+if (!FRONTEND_URL) {
+  console.warn(
+    '[WARNING] FRONTEND_URL environment variable is not set. CORS will default to http://localhost:3000'
+  );
+}
+
 // Import routes
 import paymentRoutes from './routes/payment.js';
 import webhookRoutes from './routes/webhooks.js';
@@ -23,7 +34,7 @@ const PORT = process.env.PORT || 5000;
 
 // CORS Configuration - Allow only frontend domain in production
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -49,7 +60,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'Payment Gateway Backend is running',
-    timestamp: new Date().toISOString(),
   });
 });
 
@@ -72,7 +82,7 @@ app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
 
@@ -83,8 +93,8 @@ app.listen(PORT, () => {
 ╔════════════════════════════════════════════════╗
 ║   Payment Gateway Backend Server Running       ║
 ║   Port: ${PORT}                                    ║
-║   Environment: ${process.env.NODE_ENV || 'development'} ║
-║   Frontend URL: ${process.env.FRONTEND_URL || 'Not configured'} ║
+║   Environment: ${NODE_ENV}                         ║
+║   Frontend URL: ${FRONTEND_URL || 'Not configured'} ║
 ╚════════════════════════════════════════════════╝
   `);
 });

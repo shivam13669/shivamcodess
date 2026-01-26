@@ -177,29 +177,29 @@ router.post('/verify-payment', async (req, res) => {
         break;
 
       case 'phonepe':
-        if (!transactionId) {
+        if (!orderId) {
           return res.status(400).json({
-            error: 'Missing required field: transactionId',
+            error: 'Missing required field: orderId',
           });
         }
 
-        const phonepeStatus = await phonepe.checkPhonePeTransactionStatus(transactionId);
+        const phonepeStatus = await phonepe.checkPhonePeTransactionStatus(orderId);
 
         if (!phonepeStatus.success) {
           return res.status(400).json({
             success: false,
             error: 'Payment verification failed',
-            status: phonepeStatus.status,
+            status: phonepeStatus.data?.state,
           });
         }
 
         verificationResult = {
           success: true,
           gateway: 'phonepe',
-          transactionId,
-          status: phonepeStatus.status,
-          amount: phonepeStatus.amount / 100, // Convert from paise
-          responseCode: phonepeStatus.responseCode,
+          orderId,
+          status: phonepeStatus.data?.state,
+          amount: phonepeStatus.data?.amount,
+          responseCode: phonepeStatus.data?.responseCode,
         };
         break;
 

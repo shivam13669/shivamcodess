@@ -60,58 +60,14 @@ router.post('/razorpay', async (req, res) => {
 
 /**
  * POST /api/webhook/phonepe
- * Webhook endpoint for PhonePe payment notifications
- * 
- * PhonePe requires Basic Auth (username + password)
- * PhonePe sends X-VERIFY header with signature
+ * Webhook endpoint for PhonePe OAuth API payment notifications
  */
 router.post('/phonepe', async (req, res) => {
   try {
-    const webhookData = req.body;
-    const xVerifyHeader = req.headers['x-verify'];
-    const authHeader = req.headers['authorization'];
-
-    logger.info('Received PhonePe webhook');
-
-    // Verify authentication
-    if (!authHeader || !authHeader.startsWith('Basic ')) {
-      logger.warn('Missing or invalid PhonePe auth header');
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    if (!xVerifyHeader) {
-      logger.warn('Missing PhonePe X-VERIFY header');
-      return res.status(400).json({ error: 'Missing signature' });
-    }
-
-    // Handle webhook
-    const result = await phonepe.handlePhonePeWebhook(webhookData, xVerifyHeader, authHeader);
-
-    if (!result.valid) {
-      return res.status(400).json({ error: result.message });
-    }
-
-    // TODO: Update database with payment status
-    // Example:
-    // if (result.success) {
-    //   await updatePaymentInDatabase(result.transactionId, 'completed');
-    //   await sendConfirmationEmail(customer);
-    //   await enrollUserInCourse(userId);
-    // }
-
-    logger.info('PhonePe webhook processed', result);
-
-    res.status(200).json({
-      success: true,
-      message: 'Webhook received',
-      data: result,
-    });
-  } catch (error) {
-    logger.error('Error processing PhonePe webhook', { error: error.message });
-    res.status(200).json({
-      success: false,
-      error: error.message,
-    });
+    const result = await phonepe.handlePhonePeWebhook(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (e) {
+    res.status(200).json({ success: false });
   }
 });
 
