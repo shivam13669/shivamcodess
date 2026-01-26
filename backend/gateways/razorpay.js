@@ -37,12 +37,17 @@ export const createRazorpayOrder = async (params) => {
     const client = getRazorpayClient();
     logger.info('Razorpay client initialized successfully');
 
-    // Amount in paise (multiply by 100 for INR)
-    const orderAmount = Math.round(amount * 100);
+    // Amount in paise (multiply by 100 for INR) - MUST BE INTEGER
+    const orderAmount = Math.round(parseFloat(amount) * 100);
+
+    // Validate amount
+    if (!Number.isInteger(orderAmount) || orderAmount < 1) {
+      throw new Error(`Invalid amount: ${amount}. Must be >= ₹1 (paise: ${orderAmount})`);
+    }
 
     const orderData = {
-      amount: orderAmount,
-      currency,
+      amount: orderAmount,  // Integer in paise
+      currency: currency,
       receipt: `receipt_${Date.now()}`,
       description: description || 'Payment for courses',
       customer_notify: 1,
@@ -54,9 +59,11 @@ export const createRazorpayOrder = async (params) => {
     };
 
     logger.info('Calling Razorpay API with order data', {
-      amount: orderAmount,
+      originalAmount: amount,
+      amountInPaise: orderAmount,
       currency,
-      receipt: orderData.receipt
+      receipt: orderData.receipt,
+      orderData: JSON.stringify(orderData)
     });
 
     const order = await client.orders.create(orderData);
@@ -73,15 +80,18 @@ export const createRazorpayOrder = async (params) => {
       razorpayKey: process.env.RAZORPAY_KEY_ID,
     };
   } catch (error) {
+    const razorpayError = error.error || error.response?.data || error;
+    const errorMsg = error.message || JSON.stringify(razorpayError);
+
     logger.error('Razorpay order creation failed', {
       error: error.message,
+      razorpayError: razorpayError,
       statusCode: error.statusCode,
       status: error.status,
       stack: error.stack,
-      response: error.response?.data,
-      details: JSON.stringify(error)
+      fullError: JSON.stringify(error, null, 2)
     });
-    throw new Error(`Razorpay API Error: ${error.message} (Status: ${error.statusCode || error.status || 'Unknown'})`);
+    throw new Error(`Razorpay API Error: ${errorMsg} (Status: ${error.statusCode || error.status || 'Unknown'})`);
   }
 };
 

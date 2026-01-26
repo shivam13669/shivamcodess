@@ -155,22 +155,34 @@ async function handleCheckoutSubmit() {
     const priceText = window.currentCourseForPayment.price;
     const amount = parseFloat(priceText.replace('₹', '').trim());
 
+    console.log('Payment details:', {
+      coursePrice: priceText,
+      parsedAmount: amount,
+      gateway: gateway,
+      customerEmail: email,
+      courseName: window.currentCourseForPayment.name
+    });
+
     // Store for later verification
     localStorage.setItem('current_amount', amount);
     localStorage.setItem('current_customer_email', email);
 
     // Call backend API to create order
+    const payload = {
+      amount: amount,
+      gateway: gateway,
+      customer: customerDetails,
+      description: `Payment for ${window.currentCourseForPayment.name}`
+    };
+
+    console.log('Sending to backend:', payload);
+
     const response = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        amount: amount,
-        gateway: gateway,
-        customer: customerDetails,
-        description: `Payment for ${window.currentCourseForPayment.name}`
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
