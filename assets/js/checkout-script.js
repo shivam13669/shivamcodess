@@ -458,12 +458,6 @@ function showPaymentStatus(type, title, message, details = null) {
         Back to Courses
       </button>
     `;
-  } else if (type === 'pending') {
-    html += `
-      <button class="btn-status btn-status-secondary" onclick="closePaymentStatus()">
-        Cancel Payment
-      </button>
-    `;
   }
 
   html += '</div>';
